@@ -50,4 +50,5 @@ body {
             display: flex;
             justify-content: center;
             max-width: 20px;
+            shrink: 1;
         }
