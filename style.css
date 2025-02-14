@@ -49,5 +49,5 @@ body {
             display: inline-block;
             display: flex;
             justify-content: center;
-            width: 70px
+            max-width: 40%
         }
