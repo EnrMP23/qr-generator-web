@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador de Código QR</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <h1>Generador de Código QR</h1>
+    <p>Ingresa un enlace o texto:</p>
+    <input type="text" id="inputText" placeholder="Ejemplo: https://www.tu-web-messi-es-mejor-que-cr7.com">
+    <br>
+    <button onclick="generateQR()">Generar QR</button>
+    <button id="downloadBtn" onclick="downloadQR()">Descargar QR</button>
+
+    <div id="qrcode"></div>
+
+    <script>
+        function generateQR() {
+            let inputText = document.getElementById("inputText").value;
+
+            if (inputText.trim() === "") {
+                alert("Por favor, ingresa un enlace o texto válido.");
+                return;
+            }
+
+            // Limpiar el QR anterior
+            document.getElementById("qrcode").innerHTML = "";
+
+            // Generar el nuevo código QR
+            let qrCode = new QRCode(document.getElementById("qrcode"), {
+                text: inputText,
+                width: 200,
+                height: 200
+            });
+
+            // Mostrar el botón de descarga
+            document.getElementById("downloadBtn").style.display = "inline-block";
+        }
+
+        function downloadQR() {
+            let qrCanvas = document.querySelector("#qrcode canvas");
+
+            if (!qrCanvas) {
+                alert("Genera un código QR primero.");
+                return;
+            }
+
+            let qrImage = qrCanvas.toDataURL("image/png"); // Convertir a imagen
+
+            let downloadLink = document.createElement("a");
+            downloadLink.href = qrImage;
+            downloadLink.download = "codigo_qr.png"; // Nombre del archivo
+            downloadLink.click();
+        }
+    </script>
+<footer>
+    <p>Desarrollado por EnrMP</p>
+</footer>
+</body>
+</html>
