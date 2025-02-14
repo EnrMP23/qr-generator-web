@@ -49,6 +49,8 @@ body {
             display: inline-block;
             display: flex;
             justify-content: center;
-            max-width: 20px;
-            shrink: 1;
+        }
+        #qrcode canvas, #qrcode img {
+    width: 200px; /* Reduce visualmente sin afectar la calidad */
+    height: 200px;
         }
