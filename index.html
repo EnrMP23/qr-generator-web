@@ -4,61 +4,92 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Generador de Código QR</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qr-code-styling/lib/qr-code-styling.js"></script>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <h1>Generador de Código QR</h1>
-    <p>Ingresa un enlace o texto:</p>
-    <input type="text" id="inputText" placeholder="Ejemplo: https://www.tu-web-messi-es-mejor-que-cr7.com">
-    <br>
-    <button onclick="generateQR()">Generar QR</button>
-    <button id="downloadBtn" onclick="downloadQR()">Descargar QR</button>
+    <div class="container">
+        <h1>Generador de Código QR</h1>
+        <p>Ingresa un enlace o texto:</p>
+        <input type="text" id="inputText" placeholder="Ejemplo: https://www.tu-web.com">
 
-    <div id="qrcode"></div>
+        <p>Selecciona estilo del QR:</p>
+        <select id="qrStyle">
+            <option value="square">Cuadrado</option>
+            <option value="dot">Puntos</option>
+            <option value="rounded">Redondeado</option>
+        </select>
+
+        <p>Subir logotipo (opcional):</p>
+        <input type="file" id="logoInput" accept="image/*">
+
+        <br>
+        <button class="generate-btn" onclick="generateQR()">Generar QR</button>
+        <button class="download-btn" id="downloadBtn" onclick="downloadQR()">Descargar QR</button>
+
+        <div id="qrcode"></div>
+    </div>
 
     <script>
+        let qrCode;
+
         function generateQR() {
             let inputText = document.getElementById("inputText").value;
+            let qrStyle = document.getElementById("qrStyle").value;
+            let logoFile = document.getElementById("logoInput").files[0];
 
             if (inputText.trim() === "") {
                 alert("Por favor, ingresa un enlace o texto válido.");
                 return;
             }
 
-            // Limpiar el QR anterior
-            document.getElementById("qrcode").innerHTML = "";
+            let logoUrl = "";
+            if (logoFile) {
+                let reader = new FileReader();
+                reader.onload = function (e) {
+                    logoUrl = e.target.result;
+                    createQRCode(inputText, qrStyle, logoUrl);
+                };
+                reader.readAsDataURL(logoFile);
+            } else {
+                createQRCode(inputText, qrStyle, "");
+            }
+        }
 
-            // Generar el nuevo código QR
-            let qrCode = new QRCode(document.getElementById("qrcode"), {
-                text: inputText,
+        function createQRCode(text, style, logo) {
+            document.getElementById("qrcode").innerHTML = ""; // Limpiar QR anterior
+
+            qrCode = new QRCodeStyling({
                 width: 200,
-                height: 200
+                height: 200,
+                data: text,
+                dotsOptions: {
+                    color: "#000000",
+                    type: style // "square", "dot", "rounded"
+                },
+                backgroundOptions: {
+                    color: "#ffffff"
+                },
+                image: logo, // Logo en el centro
+                imageOptions: {
+                    crossOrigin: "anonymous",
+                    margin: 0
+                }
             });
 
-            // Mostrar el botón de descarga
+            qrCode.append(document.getElementById("qrcode"));
             document.getElementById("downloadBtn").style.display = "inline-block";
         }
 
         function downloadQR() {
-            let qrCanvas = document.querySelector("#qrcode canvas");
-
-            if (!qrCanvas) {
+            if (!qrCode) {
                 alert("Genera un código QR primero.");
                 return;
             }
-
-            let qrImage = qrCanvas.toDataURL("image/png"); // Convertir a imagen
-
-            let downloadLink = document.createElement("a");
-            downloadLink.href = qrImage;
-            downloadLink.download = "codigo_qr.png"; // Nombre del archivo
-            downloadLink.click();
+            qrCode.download({ name: "codigo_qr", extension: "png" });
         }
     </script>
-<footer>
-    <p>Desarrollado por EnrMP</p>
-</footer>
+<footer>Developed by EnrMP.</footer>
 </body>
 </html>
