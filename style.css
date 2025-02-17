@@ -7,7 +7,7 @@ html, body {
 body {
     display: flex;
     flex-direction: column;
-    min-height: 50vh;
+    min-height: 30vh;
     font-family: Arial, sans-serif;
     text-align: center;
     background-color: #f4f4f4;
