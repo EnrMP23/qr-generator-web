@@ -54,3 +54,8 @@ body {
     width: 200px; /* Reduce visualmente sin afectar la calidad */
     height: 200px;
         }
+
+footer {
+            display: flex;
+            flex-wrap: wrap;
+}
