@@ -14,12 +14,15 @@ body {
     align-content: center;
     background-color: whitesmoke;
     border-radius: 15px;
+    text-decoration: none; /* Quita el subrayado */
+    display: inline-block;
 }
 
 .qr-html {
     background-color: steelblue;
     border-radius: 20px;
-    padding: 5px;
+    text-decoration: none; /* Quita el subrayado */
+    display: inline-block;
 }
 
 .compressor-html {
