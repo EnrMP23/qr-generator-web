@@ -3,99 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Generador de Código QR</title>
+    <title>MultiTools</title>
     <script src="https://cdn.jsdelivr.net/npm/qr-code-styling/lib/qr-code-styling.js"></script>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
-    <div class="container">
-        <h1>Generador de Código QR</h1>
-        <p>Ingresa un enlace o texto:</p>
-        <input type="text" id="inputText" placeholder="Ejemplo: https://www.messi-es-mejor-que-cr7.com">
-
-        <p>Selecciona estilo del QR:</p>
-        <select id="qrStyle">
-            <option value="square">Cuadrado</option>
-            <option value="rounded">Redondeado</option>
-        </select>
-
-        <p>Subir logotipo (opcional):</p>
-        <input type="file" id="logoInput" accept="image/*">
-
-        <br>
-        <button class="generate-btn" onclick="generateQR()">Generar QR</button>
-        <button class="download-btn" id="downloadBtn" onclick="downloadQR()">Descargar QR</button>
-
-        <div id="qrcode"></div>
-        
-        <footer>
+    <section class="sect-tool-choice">
+<a class="qr-html" href="qrgenerator.html" blank="">QR Generator</a>
+<a class="compressor-html" href="compressor.html" blank="">.mp4 Compressor</a>
+    </section>
+    <footer>
     <div>
     <p>Developed by EnrMP.</p>
     </div>
         </footer>
-        
-    </div>
-
-    <script>
-        let qrCode;
-
-        function generateQR() {
-            let inputText = document.getElementById("inputText").value;
-            let qrStyle = document.getElementById("qrStyle").value;
-            let logoFile = document.getElementById("logoInput").files[0];
-
-            if (inputText.trim() === "") {
-                alert("Por favor, ingresa un enlace o texto válido.");
-                return;
-            }
-
-            let logoUrl = "";
-            if (logoFile) {
-                let reader = new FileReader();
-                reader.onload = function (e) {
-                    logoUrl = e.target.result;
-                    createQRCode(inputText, qrStyle, logoUrl);
-                };
-                reader.readAsDataURL(logoFile);
-            } else {
-                createQRCode(inputText, qrStyle, "");
-            }
-        }
-
-        function createQRCode(text, style, logo) {
-            document.getElementById("qrcode").innerHTML = ""; // Limpiar QR anterior
-
-            qrCode = new QRCodeStyling({
-                width: 1000,
-                height: 1000,
-                data: text,
-                dotsOptions: {
-                    color: "#000000",
-                    type: style // "square", "dot", "rounded"
-                },
-                backgroundOptions: {
-                    color: "#ffffff"
-                },
-                image: logo, // Logo en el centro
-                imageOptions: {
-                    crossOrigin: "anonymous",
-                    margin: 0
-                }
-            });
-
-            qrCode.append(document.getElementById("qrcode"));
-            document.getElementById("downloadBtn").style.display = "inline-block";
-        }
-
-        function downloadQR() {
-            if (!qrCode) {
-                alert("Genera un código QR primero.");
-                return;
-            }
-            qrCode.download({ name: "codigo_qr", extension: "png" });
-        }
-    </script>
 
 </body>
 </html>
