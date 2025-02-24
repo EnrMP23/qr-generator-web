@@ -11,25 +11,21 @@ body {
 .sect-tool-choice {
     display: flex;
     justify-content: center;
-    align-content: center;
+    align-items: center; /* Se usa align-items en lugar de align-content */
     background-color: whitesmoke;
     border-radius: 15px;
-    text-decoration: none; /* Quita el subrayado */
-    display: inline-block;
+    text-decoration: none; /* No es necesario en un contenedor */
 }
 
-.qr-html {
-    background-color: steelblue;
-    border-radius: 20px;
-    text-decoration: none; /* Quita el subrayado */
-    display: inline-block;
-}
-
+.qr-html,
 .compressor-html {
     background-color: steelblue;
     border-radius: 20px;
-    padding: 5px;
+    text-decoration: none; /* Quita el subrayado */
+    display: inline-block;
+    padding: 5px; /* Se unifica para ambas clases */
 }
+
 
 .container {
     background: white;
