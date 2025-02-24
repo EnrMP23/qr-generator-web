@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Compresor de Video</title>
+    <script src="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.11.6"></script>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; margin: 20px; }
+        input, button { margin: 10px; padding: 10px; font-size: 16px; }
+        video { max-width: 100%; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+    <h2>🎥 Compresor de Videos MP4</h2>
+    <input type="file" id="inputVideo" accept="video/mp4">
+    <br>
+    <label for="size">Tamaño Deseado (MB): </label>
+    <input type="number" id="size" min="1" value="5">
+    <br>
+    <button onclick="comprimirVideo()">🔧 Comprimir Video</button>
+    <br>
+    <h3>Video Comprimido:</h3>
+    <video id="outputVideo" controls></video>
+    <a id="downloadLink" style="display:none">⬇️ Descargar Video</a>
+
+    <script>
+        const { createFFmpeg, fetchFile } = FFmpeg;
+        const ffmpeg = createFFmpeg({ log: true });
+
+        async function comprimirVideo() {
+            const inputFile = document.getElementById('inputVideo').files[0];
+            const tamañoDeseado = document.getElementById('size').value;
+
+            if (!inputFile) {
+                alert("📂 Selecciona un archivo MP4.");
+                return;
+            }
+
+            if (!ffmpeg.isLoaded()) {
+                await ffmpeg.load();
+            }
+
+            const inputName = 'input.mp4';
+            const outputName = 'output.mp4';
+
+            ffmpeg.FS('writeFile', inputName, await fetchFile(inputFile));
+
+            // Comprimir usando un bitrate estimado (aprox. 1000k por MB y por minuto)
+            const bitrate = (tamañoDeseado * 1000) / 1; // Ajusta esto según duración real
+
+            await ffmpeg.run('-i', inputName, '-b:v', `${bitrate}k`, '-preset', 'slow', outputName);
+
+            const data = ffmpeg.FS('readFile', outputName);
+            const videoBlob = new Blob([data.buffer], { type: 'video/mp4' });
+            const videoUrl = URL.createObjectURL(videoBlob);
+
+            const outputVideo = document.getElementById('outputVideo');
+            outputVideo.src = videoUrl;
+
+            const downloadLink = document.getElementById('downloadLink');
+            downloadLink.href = videoUrl;
+            downloadLink.download = "video_comprimido.mp4";
+            downloadLink.style.display = "block";
+            downloadLink.innerText = "⬇️ Descargar Video";
+        }
+    </script>
+
+</body>
+</html>
