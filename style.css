@@ -16,7 +16,17 @@ body {
     border-radius: 15px;
 }
 
-.
+.qr-html {
+    background-color: steelblue;
+    border-radius: 20px;
+    padding: 5px;
+}
+
+.compressor-html {
+    background-color: steelblue;
+    border-radius: 20px;
+    padding: 5px;
+}
 
 .container {
     background: white;
