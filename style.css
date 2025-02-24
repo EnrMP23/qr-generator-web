@@ -12,7 +12,11 @@ body {
     display: flex;
     justify-content: center;
     align-content: center;
+    background-color: whitesmoke;
+    border-radius: 15px;
 }
+
+.
 
 .container {
     background: white;
