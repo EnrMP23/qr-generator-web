@@ -8,16 +8,6 @@ body {
     flex-wrap: wrap;
 }
 
-.sect-tool-choice {
-    display: flex;
-    justify-content: center;
-    align-items: center; /* Se usa align-items en lugar de align-content */
-    background-color: whitesmoke;
-    border-radius: 15px;
-    text-decoration: none; /* No es necesario en un contenedor */
-    width: 50vw;
-}
-
 .qr-html,
 .compressor-html {
     background-color: steelblue;
