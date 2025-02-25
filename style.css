@@ -8,7 +8,7 @@ body {
     flex-wrap: wrap;
 }
 
-section .sect-tool-choice {
+.sect-tool-choice {
     display: flex;
     justify-content: center;
     align-items: center; /* Se usa align-items en lugar de align-content */
