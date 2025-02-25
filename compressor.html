@@ -12,6 +12,7 @@
     .progress-container { width: 80%; background-color: #ddd; margin: 20px auto; border-radius: 5px; }
     .progress-bar { width: 0%; height: 30px; background-color: #4CAF50; text-align: center; line-height: 30px; color: white; border-radius: 5px; }
     video { max-width: 90%; margin-top: 20px; }
+    #statusMessage { font-size: 18px; margin-top: 10px; }
   </style>
 </head>
 <body>
@@ -41,8 +42,8 @@
     const statusMessage = document.getElementById('statusMessage');
     const outputVideo = document.getElementById('outputVideo');
     const downloadLink = document.getElementById('downloadLink');
-
-    // Actualiza el mensaje cuando se selecciona un archivo
+    
+    // Actualiza el mensaje de estado al seleccionar un archivo
     videoInput.addEventListener('change', () => {
       if (videoInput.files.length > 0) {
         statusMessage.textContent = "Archivo seleccionado: " + videoInput.files[0].name;
@@ -50,25 +51,44 @@
         statusMessage.textContent = "Estado: Esperando archivo...";
       }
     });
-
+    
+    // Función para cargar FFmpeg con timeout (30 segundos)
+    function loadFFmpegWithTimeout(timeout = 30000) {
+      return new Promise(async (resolve, reject) => {
+        const timer = setTimeout(() => {
+          reject(new Error("Timeout: No se pudo cargar FFmpeg en el tiempo esperado."));
+        }, timeout);
+        try {
+          await ffmpeg.load();
+          clearTimeout(timer);
+          resolve();
+        } catch (e) {
+          clearTimeout(timer);
+          reject(e);
+        }
+      });
+    }
+    
     compressBtn.addEventListener('click', async () => {
       if (videoInput.files.length === 0) {
         alert("Por favor, selecciona un archivo MP4.");
         return;
       }
       
-      // Cargar FFmpeg si no está cargado
-      if (!ffmpeg.isLoaded()) {
-        statusMessage.textContent = "Cargando FFmpeg, espere...";
-        await ffmpeg.load();
+      statusMessage.textContent = "Cargando FFmpeg, espere...";
+      
+      try {
+        await loadFFmpegWithTimeout(30000);
+      } catch (error) {
+        statusMessage.textContent = "❌ Error al cargar FFmpeg: " + error.message;
+        return;
       }
       
       statusMessage.textContent = "Procesando archivo...";
       const file = videoInput.files[0];
-      // Guardamos el archivo en la memoria virtual de ffmpeg
       ffmpeg.FS('writeFile', 'input.mp4', await fetchFile(file));
       
-      // Obtener la duración usando un elemento <video> de HTML5
+      // Obtener la duración del video usando un elemento <video>
       const videoElem = document.createElement('video');
       videoElem.preload = 'metadata';
       videoElem.src = URL.createObjectURL(file);
@@ -78,30 +98,35 @@
       });
       const duration = videoElem.duration;
       
-      // Calcular el bitrate para lograr el tamaño objetivo
+      // Calcular el bitrate para alcanzar el tamaño objetivo
       const targetSizeMB = parseFloat(targetSizeInput.value);
       const targetBits = targetSizeMB * 8 * 1024 * 1024;
       const bitrate = Math.max(Math.floor((targetBits / duration) / 1000), 500);
       
       statusMessage.textContent = "Iniciando compresión con bitrate: " + bitrate + " kbps";
       
-      // Configurar el progreso para actualizar en la misma línea
+      // Configurar actualizaciones de progreso (se actualiza en la misma línea)
       ffmpeg.setProgress(({ ratio }) => {
         const percent = Math.min(Math.floor(ratio * 100), 100);
         progressBar.style.width = percent + "%";
         progressBar.textContent = percent + "%";
       });
       
-      // Ejecutar la compresión con preset ultrafast y crf 28 para acelerar el proceso
-      await ffmpeg.run(
-        '-i', 'input.mp4',
-        '-b:v', `${bitrate}k`,
-        '-preset', 'ultrafast',
-        '-crf', '28',
-        'output.mp4'
-      );
+      try {
+        await ffmpeg.run(
+          '-i', 'input.mp4',
+          '-b:v', `${bitrate}k`,
+          '-preset', 'ultrafast',
+          '-crf', '28',
+          'output.mp4'
+        );
+      } catch (e) {
+        statusMessage.textContent = "❌ Error durante la compresión.";
+        console.error("Error de compresión:", e);
+        return;
+      }
       
-      // Leer el archivo comprimido y crear un objeto URL para visualizar/descargar
+      // Leer el archivo comprimido y generar URL para visualizar/descargar
       const data = ffmpeg.FS('readFile', 'output.mp4');
       const videoBlob = new Blob([data.buffer], { type: 'video/mp4' });
       const videoUrl = URL.createObjectURL(videoBlob);
