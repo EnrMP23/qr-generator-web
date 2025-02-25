@@ -3,146 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Compresor de Video</title>
-    <script src="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.11.6"></script>
-    <style>
-        body { font-family: Arial, sans-serif; text-align: center; margin: 20px; }
-        input, button { margin: 10px; padding: 10px; font-size: 16px; }
-        video { max-width: 100%; margin-top: 10px; }
-        .progress-container { width: 100%; background-color: #ddd; margin: 20px 0; }
-        .progress-bar { width: 0%; height: 30px; background-color: #4CAF50; text-align: center; line-height: 30px; color: white; }
-    </style>
+    <title>Compresor de Video MP4</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ffmpeg.js/0.11.1/ffmpeg.min.js"></script>
 </head>
 <body>
-
-    <h2>🎥 Compresor de Videos .MP4</h2>
-    <input type="file" id="inputVideo" accept="video/mp4" onchange="actualizarEstado()">
-    <br>
-    <label for="size">Tamaño Deseado (MB): </label>
-    <input type="number" id="size" min="1" value="5">
-    <br>
-    <button onclick="comprimirVideo()">🔧 Comprimir Video</button>
-    <br>
-
-    <!-- Mensaje de estado -->
-    <h3 id="statusMessage">⌛ Esperando archivo...</h3>
-
-    <!-- Barra de progreso -->
-    <div class="progress-container">
-        <div class="progress-bar" id="progressBar">0%</div>
-    </div>
-
-    <h3>Video Comprimido:</h3>
-    <video id="outputVideo" controls></video>
-    <a id="downloadLink" style="display:none">⬇️ Descargar Video</a>
-
+    <h2>Sube tu video MP4 para comprimirlo</h2>
+    <input type="file" id="videoInput" accept="video/mp4">
+    <button onclick="compressVideo()">Comprimir Video</button>
+    <p id="status"></p>
+    <a id="downloadLink" style="display:none">Descargar Video Comprimido</a>
+    
     <script>
-        const { createFFmpeg, fetchFile } = FFmpeg;
-        const ffmpeg = createFFmpeg({ log: true });
-
-        function actualizarEstado() {
-            const inputFile = document.getElementById('inputVideo').files[0];
-            const statusMessage = document.getElementById("statusMessage");
-
-            if (inputFile) {
-                statusMessage.innerText = `📂 Archivo seleccionado: ${inputFile.name}`;
-            } else {
-                statusMessage.innerText = "⌛ Esperando archivo...";
-            }
-        }
-
-        async function comprimirVideo() {
-            const inputFile = document.getElementById('inputVideo').files[0];
-            const tamañoDeseado = parseInt(document.getElementById('size').value);
-            const progressBar = document.getElementById("progressBar");
-            const statusMessage = document.getElementById("statusMessage");
-
-            if (!inputFile) {
-                statusMessage.innerText = "❌ No se seleccionó un archivo.";
-                alert("📂 Selecciona un archivo MP4.");
-                return;
-            }
-
-            statusMessage.innerText = "⏳ Cargando FFmpeg...";
+        async function compressVideo() {
+            const input = document.getElementById('videoInput');
+            const status = document.getElementById('status');
+            const downloadLink = document.getElementById('downloadLink');
             
-            if (!ffmpeg.isLoaded()) {
-                await ffmpeg.load();
-            }
-
-            statusMessage.innerText = "📂 Cargando archivo en FFmpeg...";
-            const inputName = 'input.mp4';
-            const outputName = 'output.mp4';
-
-            ffmpeg.FS('writeFile', inputName, await fetchFile(inputFile));
-
-            // Obtener duración del video
-            const duracion = await obtenerDuracion(inputFile);
-            if (!duracion || isNaN(duracion)) {
-                statusMessage.innerText = "❌ No se pudo obtener la duración del video.";
-                alert("❌ Error al calcular la duración del video.");
+            if (input.files.length === 0) {
+                alert("Selecciona un archivo MP4 primero");
                 return;
             }
 
-            // Calcular el bitrate adecuado
-            const bitrate = Math.max(500, Math.floor(((tamañoDeseado * 8 * 1024 * 1024) / duracion) / 1000));
-
-            console.log(`🎯 Duración: ${duracion}s | 📏 Bitrate estimado: ${bitrate} kbps`);
-
-            // Resetear progreso
-            progressBar.style.width = "0%";
-            progressBar.innerText = "0%";
-            statusMessage.innerText = "⏳ Comprimiendo video...";
-
-            ffmpeg.setProgress(({ ratio }) => {
-                const progreso = Math.round(ratio * 100);
-                progressBar.style.width = progreso + "%";
-                progressBar.innerText = progreso + "%";
-            });
-
-            try {
-                await ffmpeg.run('-i', inputName, '-b:v', `${bitrate}k`, '-preset', 'slow', outputName);
-
-                console.log("✅ Compresión completada. Leyendo el archivo...");
-                const data = ffmpeg.FS('readFile', outputName);
-                const videoBlob = new Blob([data.buffer], { type: 'video/mp4' });
-                const videoUrl = URL.createObjectURL(videoBlob);
-
-                document.getElementById('outputVideo').src = videoUrl;
-
-                const downloadLink = document.getElementById('downloadLink');
-                downloadLink.href = videoUrl;
-                downloadLink.download = "video_comprimido.mp4";
-                downloadLink.style.display = "block";
-                downloadLink.innerText = "⬇️ Descargar Video";
-
-                progressBar.style.width = "100%";
-                progressBar.innerText = "✅ Completado";
-                statusMessage.innerText = "✅ Compresión terminada con éxito.";
-            } catch (error) {
-                console.error("❌ Error en la compresión:", error);
-                statusMessage.innerText = "❌ Error en la compresión. Ver consola.";
-                alert("❌ Falló la compresión. Revisa la consola.");
-            }
-        }
-
-        function obtenerDuracion(archivo) {
-            return new Promise((resolve) => {
-                const video = document.createElement('video');
-                video.preload = "metadata";
-
-                video.onloadedmetadata = function() {
-                    window.URL.revokeObjectURL(video.src);
-                    resolve(video.duration);
-                };
-
-                video.onerror = function() {
-                    resolve(null);
-                };
-
-                video.src = URL.createObjectURL(archivo);
-            });
+            status.textContent = "Cargando FFmpeg...";
+            const { createFFmpeg, fetchFile } = FFmpeg;
+            const ffmpeg = createFFmpeg({ log: true });
+            await ffmpeg.load();
+            
+            status.textContent = "Procesando video...";
+            const file = input.files[0];
+            const fileName = 'input.mp4';
+            
+            ffmpeg.FS('writeFile', fileName, await fetchFile(file));
+            
+            await ffmpeg.run('-i', fileName, '-b:v', '500k', '-preset', 'fast', 'output.mp4');
+            
+            const data = ffmpeg.FS('readFile', 'output.mp4');
+            const blob = new Blob([data.buffer], { type: 'video/mp4' });
+            const url = URL.createObjectURL(blob);
+            
+            downloadLink.href = url;
+            downloadLink.download = 'compressed.mp4';
+            downloadLink.style.display = 'block';
+            downloadLink.textContent = "Descargar Video Comprimido";
+            status.textContent = "Compresión completada.";
         }
     </script>
-
 </body>
 </html>
