@@ -15,7 +15,7 @@
 </head>
 <body>
 
-    <h2>🎥 Compresor de Videos .MP4</h2>
+    <h2>🎥 Compresor de Videos MP4</h2>
     <input type="file" id="inputVideo" accept="video/mp4">
     <br>
     <label for="size">Tamaño Deseado (MB): </label>
@@ -57,9 +57,17 @@
 
             ffmpeg.FS('writeFile', inputName, await fetchFile(inputFile));
 
-            // Estimar un bitrate para alcanzar el tamaño deseado
-            const duracion = await obtenerDuracion(inputName);
-            const bitrate = calcularBitrate(tamañoDeseado, duracion);
+            // Obtener duración del video
+            const metadata = await ffmpeg.run('-i', inputName).catch(() => null);
+            const match = metadata ? metadata.match(/Duration: (\d+):(\d+):(\d+\.\d+)/) : null;
+            let duracion = 60; // Valor por defecto
+            if (match) {
+                const [horas, minutos, segundos] = match.slice(1).map(parseFloat);
+                duracion = horas * 3600 + minutos * 60 + segundos;
+            }
+
+            // Calcular el bitrate adecuado
+            const bitrate = Math.max(500, Math.floor(((tamañoDeseado * 8 * 1024 * 1024) / duracion) / 1000));
 
             console.log(`📏 Duración: ${duracion}s | 🎯 Bitrate: ${bitrate} kbps`);
 
@@ -89,21 +97,6 @@
 
             progressBar.style.width = "100%";
             progressBar.innerText = "✅ Completado";
-        }
-
-        async function obtenerDuracion(archivo) {
-            const metadata = await ffmpeg.run('-i', archivo);
-            const match = metadata.match(/Duration: (\d+):(\d+):(\d+\.\d+)/);
-            if (match) {
-                const [horas, minutos, segundos] = match.slice(1).map(parseFloat);
-                return horas * 3600 + minutos * 60 + segundos;
-            }
-            return 60; // Valor por defecto si no se puede obtener
-        }
-
-        function calcularBitrate(tamañoMB, duracion) {
-            const tamañoBits = tamañoMB * 8 * 1024 * 1024; // Convertir MB a bits
-            return Math.max(500, Math.floor((tamañoBits / duracion) / 1000)); // Convertir a kbps
         }
     </script>
 
