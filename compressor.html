@@ -27,7 +27,7 @@
             status.textContent = "Cargando FFmpeg...";
             try {
                 const { createFFmpeg, fetchFile } = FFmpeg;
-                const ffmpeg = createFFmpeg({ log: true });
+                const ffmpeg = createFFmpeg({ log: true, corePath: "./ffmpeg-core/ffmpeg-core.wasm" });
                 await ffmpeg.load();
                 
                 status.textContent = "Procesando video...";
@@ -36,7 +36,7 @@
                 
                 ffmpeg.FS('writeFile', fileName, await fetchFile(file));
                 
-                await ffmpeg.run('-i', fileName, '-b:v', '500k', '-preset', 'fast', 'output.mp4');
+                await ffmpeg.run('-i', fileName, '-b:v', '500k', '-preset', 'ultrafast', 'output.mp4');
                 
                 const data = ffmpeg.FS('readFile', 'output.mp4');
                 const blob = new Blob([data.buffer], { type: 'video/mp4' });
