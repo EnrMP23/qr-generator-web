@@ -15,8 +15,8 @@
 </head>
 <body>
 
-    <h2>🎥 Compresor de Videos MP4</h2>
-    <input type="file" id="inputVideo" accept="video/mp4">
+    <h2>🎥 Compresor de Videos .MP4</h2>
+    <input type="file" id="inputVideo" accept="video/mp4" onchange="actualizarEstado()">
     <br>
     <label for="size">Tamaño Deseado (MB): </label>
     <input type="number" id="size" min="1" value="5">
@@ -39,6 +39,17 @@
     <script>
         const { createFFmpeg, fetchFile } = FFmpeg;
         const ffmpeg = createFFmpeg({ log: true });
+
+        function actualizarEstado() {
+            const inputFile = document.getElementById('inputVideo').files[0];
+            const statusMessage = document.getElementById("statusMessage");
+
+            if (inputFile) {
+                statusMessage.innerText = `📂 Archivo seleccionado: ${inputFile.name}`;
+            } else {
+                statusMessage.innerText = "⌛ Esperando archivo...";
+            }
+        }
 
         async function comprimirVideo() {
             const inputFile = document.getElementById('inputVideo').files[0];
@@ -66,7 +77,7 @@
 
             // Obtener duración del video
             const duracion = await obtenerDuracion(inputFile);
-            if (!duracion) {
+            if (!duracion || isNaN(duracion)) {
                 statusMessage.innerText = "❌ No se pudo obtener la duración del video.";
                 alert("❌ Error al calcular la duración del video.");
                 return;
