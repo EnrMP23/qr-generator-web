@@ -19,8 +19,8 @@ body {
     font-size: normal;
 }
 
-.qr-html,
-.compressor-html: hover {
+.qr-html:hover,
+.compressor-html:hover {
     background-color: green;
 }
 
