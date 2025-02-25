@@ -25,27 +25,32 @@
             }
 
             status.textContent = "Cargando FFmpeg...";
-            const { createFFmpeg, fetchFile } = FFmpeg;
-            const ffmpeg = createFFmpeg({ log: true });
-            await ffmpeg.load();
-            
-            status.textContent = "Procesando video...";
-            const file = input.files[0];
-            const fileName = 'input.mp4';
-            
-            ffmpeg.FS('writeFile', fileName, await fetchFile(file));
-            
-            await ffmpeg.run('-i', fileName, '-b:v', '500k', '-preset', 'fast', 'output.mp4');
-            
-            const data = ffmpeg.FS('readFile', 'output.mp4');
-            const blob = new Blob([data.buffer], { type: 'video/mp4' });
-            const url = URL.createObjectURL(blob);
-            
-            downloadLink.href = url;
-            downloadLink.download = 'compressed.mp4';
-            downloadLink.style.display = 'block';
-            downloadLink.textContent = "Descargar Video Comprimido";
-            status.textContent = "Compresión completada.";
+            try {
+                const { createFFmpeg, fetchFile } = FFmpeg;
+                const ffmpeg = createFFmpeg({ log: true });
+                await ffmpeg.load();
+                
+                status.textContent = "Procesando video...";
+                const file = input.files[0];
+                const fileName = 'input.mp4';
+                
+                ffmpeg.FS('writeFile', fileName, await fetchFile(file));
+                
+                await ffmpeg.run('-i', fileName, '-b:v', '500k', '-preset', 'fast', 'output.mp4');
+                
+                const data = ffmpeg.FS('readFile', 'output.mp4');
+                const blob = new Blob([data.buffer], { type: 'video/mp4' });
+                const url = URL.createObjectURL(blob);
+                
+                downloadLink.href = url;
+                downloadLink.download = 'compressed.mp4';
+                downloadLink.style.display = 'block';
+                downloadLink.textContent = "Descargar Video Comprimido";
+                status.textContent = "Compresión completada.";
+            } catch (error) {
+                console.error("Error en la compresión: ", error);
+                status.textContent = "Error en la compresión. Inténtalo de nuevo.";
+            }
         }
     </script>
 </body>
