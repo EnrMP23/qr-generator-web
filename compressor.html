@@ -49,27 +49,27 @@
 
             // Cargar FFmpeg si no está cargado
             if (!ffmpeg.isLoaded()) {
+                console.log("⏳ Cargando FFmpeg...");
                 await ffmpeg.load();
             }
 
             const inputName = 'input.mp4';
             const outputName = 'output.mp4';
 
+            console.log("📂 Cargando archivo en FFmpeg...");
             ffmpeg.FS('writeFile', inputName, await fetchFile(inputFile));
 
-            // Obtener duración del video
-            const metadata = await ffmpeg.run('-i', inputName).catch(() => null);
-            const match = metadata ? metadata.match(/Duration: (\d+):(\d+):(\d+\.\d+)/) : null;
-            let duracion = 60; // Valor por defecto
-            if (match) {
-                const [horas, minutos, segundos] = match.slice(1).map(parseFloat);
-                duracion = horas * 3600 + minutos * 60 + segundos;
+            // Obtener duración del video usando un elemento <video> (más confiable que FFmpeg.js)
+            const duracion = await obtenerDuracion(inputFile);
+            if (!duracion) {
+                alert("❌ No se pudo obtener la duración del video.");
+                return;
             }
 
             // Calcular el bitrate adecuado
             const bitrate = Math.max(500, Math.floor(((tamañoDeseado * 8 * 1024 * 1024) / duracion) / 1000));
 
-            console.log(`📏 Duración: ${duracion}s | 🎯 Bitrate: ${bitrate} kbps`);
+            console.log(`🎯 Duración: ${duracion}s | 📏 Bitrate estimado: ${bitrate} kbps`);
 
             // Resetear progreso
             progressBar.style.width = "0%";
@@ -81,8 +81,10 @@
                 progressBar.innerText = progreso + "%";
             });
 
+            console.log("🔧 Comprimiendo video...");
             await ffmpeg.run('-i', inputName, '-b:v', `${bitrate}k`, '-preset', 'slow', outputName);
 
+            console.log("✅ Compresión completada. Leyendo el archivo...");
             const data = ffmpeg.FS('readFile', outputName);
             const videoBlob = new Blob([data.buffer], { type: 'video/mp4' });
             const videoUrl = URL.createObjectURL(videoBlob);
@@ -97,6 +99,24 @@
 
             progressBar.style.width = "100%";
             progressBar.innerText = "✅ Completado";
+        }
+
+        function obtenerDuracion(archivo) {
+            return new Promise((resolve) => {
+                const video = document.createElement('video');
+                video.preload = "metadata";
+
+                video.onloadedmetadata = function() {
+                    window.URL.revokeObjectURL(video.src);
+                    resolve(video.duration);
+                };
+
+                video.onerror = function() {
+                    resolve(null);
+                };
+
+                video.src = URL.createObjectURL(archivo);
+            });
         }
     </script>
 
