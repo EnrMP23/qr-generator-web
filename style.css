@@ -21,10 +21,12 @@ body {
 .qr-html,
 .compressor-html {
     background-color: steelblue;
-    border-radius: 20px;
+    border-radius: 15px;
     text-decoration: none; /* Quita el subrayado */
     display: inline-block;
     padding: 5px; /* Se unifica para ambas clases */
+    color: white;
+    font-size: normal;
 }
 
 
