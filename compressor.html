@@ -24,6 +24,9 @@
     <button onclick="comprimirVideo()">🔧 Comprimir Video</button>
     <br>
 
+    <!-- Mensaje de estado -->
+    <h3 id="statusMessage">⌛ Esperando archivo...</h3>
+
     <!-- Barra de progreso -->
     <div class="progress-container">
         <div class="progress-bar" id="progressBar">0%</div>
@@ -41,28 +44,31 @@
             const inputFile = document.getElementById('inputVideo').files[0];
             const tamañoDeseado = parseInt(document.getElementById('size').value);
             const progressBar = document.getElementById("progressBar");
+            const statusMessage = document.getElementById("statusMessage");
 
             if (!inputFile) {
+                statusMessage.innerText = "❌ No se seleccionó un archivo.";
                 alert("📂 Selecciona un archivo MP4.");
                 return;
             }
 
-            // Cargar FFmpeg si no está cargado
+            statusMessage.innerText = "⏳ Cargando FFmpeg...";
+            
             if (!ffmpeg.isLoaded()) {
-                console.log("⏳ Cargando FFmpeg...");
                 await ffmpeg.load();
             }
 
+            statusMessage.innerText = "📂 Cargando archivo en FFmpeg...";
             const inputName = 'input.mp4';
             const outputName = 'output.mp4';
 
-            console.log("📂 Cargando archivo en FFmpeg...");
             ffmpeg.FS('writeFile', inputName, await fetchFile(inputFile));
 
-            // Obtener duración del video usando un elemento <video> (más confiable que FFmpeg.js)
+            // Obtener duración del video
             const duracion = await obtenerDuracion(inputFile);
             if (!duracion) {
-                alert("❌ No se pudo obtener la duración del video.");
+                statusMessage.innerText = "❌ No se pudo obtener la duración del video.";
+                alert("❌ Error al calcular la duración del video.");
                 return;
             }
 
@@ -74,6 +80,7 @@
             // Resetear progreso
             progressBar.style.width = "0%";
             progressBar.innerText = "0%";
+            statusMessage.innerText = "⏳ Comprimiendo video...";
 
             ffmpeg.setProgress(({ ratio }) => {
                 const progreso = Math.round(ratio * 100);
@@ -81,24 +88,30 @@
                 progressBar.innerText = progreso + "%";
             });
 
-            console.log("🔧 Comprimiendo video...");
-            await ffmpeg.run('-i', inputName, '-b:v', `${bitrate}k`, '-preset', 'slow', outputName);
+            try {
+                await ffmpeg.run('-i', inputName, '-b:v', `${bitrate}k`, '-preset', 'slow', outputName);
 
-            console.log("✅ Compresión completada. Leyendo el archivo...");
-            const data = ffmpeg.FS('readFile', outputName);
-            const videoBlob = new Blob([data.buffer], { type: 'video/mp4' });
-            const videoUrl = URL.createObjectURL(videoBlob);
+                console.log("✅ Compresión completada. Leyendo el archivo...");
+                const data = ffmpeg.FS('readFile', outputName);
+                const videoBlob = new Blob([data.buffer], { type: 'video/mp4' });
+                const videoUrl = URL.createObjectURL(videoBlob);
 
-            document.getElementById('outputVideo').src = videoUrl;
+                document.getElementById('outputVideo').src = videoUrl;
 
-            const downloadLink = document.getElementById('downloadLink');
-            downloadLink.href = videoUrl;
-            downloadLink.download = "video_comprimido.mp4";
-            downloadLink.style.display = "block";
-            downloadLink.innerText = "⬇️ Descargar Video";
+                const downloadLink = document.getElementById('downloadLink');
+                downloadLink.href = videoUrl;
+                downloadLink.download = "video_comprimido.mp4";
+                downloadLink.style.display = "block";
+                downloadLink.innerText = "⬇️ Descargar Video";
 
-            progressBar.style.width = "100%";
-            progressBar.innerText = "✅ Completado";
+                progressBar.style.width = "100%";
+                progressBar.innerText = "✅ Completado";
+                statusMessage.innerText = "✅ Compresión terminada con éxito.";
+            } catch (error) {
+                console.error("❌ Error en la compresión:", error);
+                statusMessage.innerText = "❌ Error en la compresión. Ver consola.";
+                alert("❌ Falló la compresión. Revisa la consola.");
+            }
         }
 
         function obtenerDuracion(archivo) {
