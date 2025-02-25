@@ -11,12 +11,17 @@ body {
 .qr-html,
 .compressor-html {
     background-color: steelblue;
-    border-radius: 15px;
+    border-radius: 10px;
     text-decoration: none; /* Quita el subrayado */
     display: inline-block;
-    padding: 5px; /* Se unifica para ambas clases */
+    padding: 7px; /* Se unifica para ambas clases */
     color: white;
     font-size: normal;
+}
+
+.qr-html,
+.compressor-html: hover {
+    background-color: green;
 }
 
 
