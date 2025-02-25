@@ -9,6 +9,8 @@
         body { font-family: Arial, sans-serif; text-align: center; margin: 20px; }
         input, button { margin: 10px; padding: 10px; font-size: 16px; }
         video { max-width: 100%; margin-top: 10px; }
+        .progress-container { width: 100%; background-color: #ddd; margin: 20px 0; }
+        .progress-bar { width: 0%; height: 30px; background-color: #4CAF50; text-align: center; line-height: 30px; color: white; }
     </style>
 </head>
 <body>
@@ -21,6 +23,12 @@
     <br>
     <button onclick="comprimirVideo()">🔧 Comprimir Video</button>
     <br>
+
+    <!-- Barra de progreso -->
+    <div class="progress-container">
+        <div class="progress-bar" id="progressBar">0%</div>
+    </div>
+
     <h3>Video Comprimido:</h3>
     <video id="outputVideo" controls></video>
     <a id="downloadLink" style="display:none">⬇️ Descargar Video</a>
@@ -31,13 +39,15 @@
 
         async function comprimirVideo() {
             const inputFile = document.getElementById('inputVideo').files[0];
-            const tamañoDeseado = document.getElementById('size').value;
+            const tamañoDeseado = parseInt(document.getElementById('size').value);
+            const progressBar = document.getElementById("progressBar");
 
             if (!inputFile) {
                 alert("📂 Selecciona un archivo MP4.");
                 return;
             }
 
+            // Cargar FFmpeg si no está cargado
             if (!ffmpeg.isLoaded()) {
                 await ffmpeg.load();
             }
@@ -47,8 +57,21 @@
 
             ffmpeg.FS('writeFile', inputName, await fetchFile(inputFile));
 
-            // Comprimir usando un bitrate estimado (aprox. 1000k por MB y por minuto)
-            const bitrate = (tamañoDeseado * 1000) / 1; // Ajusta esto según duración real
+            // Estimar un bitrate para alcanzar el tamaño deseado
+            const duracion = await obtenerDuracion(inputName);
+            const bitrate = calcularBitrate(tamañoDeseado, duracion);
+
+            console.log(`📏 Duración: ${duracion}s | 🎯 Bitrate: ${bitrate} kbps`);
+
+            // Resetear progreso
+            progressBar.style.width = "0%";
+            progressBar.innerText = "0%";
+
+            ffmpeg.setProgress(({ ratio }) => {
+                const progreso = Math.round(ratio * 100);
+                progressBar.style.width = progreso + "%";
+                progressBar.innerText = progreso + "%";
+            });
 
             await ffmpeg.run('-i', inputName, '-b:v', `${bitrate}k`, '-preset', 'slow', outputName);
 
@@ -56,14 +79,31 @@
             const videoBlob = new Blob([data.buffer], { type: 'video/mp4' });
             const videoUrl = URL.createObjectURL(videoBlob);
 
-            const outputVideo = document.getElementById('outputVideo');
-            outputVideo.src = videoUrl;
+            document.getElementById('outputVideo').src = videoUrl;
 
             const downloadLink = document.getElementById('downloadLink');
             downloadLink.href = videoUrl;
             downloadLink.download = "video_comprimido.mp4";
             downloadLink.style.display = "block";
             downloadLink.innerText = "⬇️ Descargar Video";
+
+            progressBar.style.width = "100%";
+            progressBar.innerText = "✅ Completado";
+        }
+
+        async function obtenerDuracion(archivo) {
+            const metadata = await ffmpeg.run('-i', archivo);
+            const match = metadata.match(/Duration: (\d+):(\d+):(\d+\.\d+)/);
+            if (match) {
+                const [horas, minutos, segundos] = match.slice(1).map(parseFloat);
+                return horas * 3600 + minutos * 60 + segundos;
+            }
+            return 60; // Valor por defecto si no se puede obtener
+        }
+
+        function calcularBitrate(tamañoMB, duracion) {
+            const tamañoBits = tamañoMB * 8 * 1024 * 1024; // Convertir MB a bits
+            return Math.max(500, Math.floor((tamañoBits / duracion) / 1000)); // Convertir a kbps
         }
     </script>
 
